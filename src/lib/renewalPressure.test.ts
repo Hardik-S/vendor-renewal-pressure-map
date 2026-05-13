@@ -17,6 +17,26 @@ describe("renewal pressure scoring", () => {
     expect(scoreRenewal(deskPilot!).priceIncreasePercent).toBeCloseTo(50, 1);
   });
 
+  it("keeps proposed new spend from rendering infinite uplift", () => {
+    const scored = scoreRenewal({
+      vendor: "PilotDesk",
+      category: "Support pilot",
+      renewalDate: "2026-06-20",
+      cancellationDeadline: "2026-05-18",
+      owner: "Unassigned during procurement handoff",
+      currentAnnualSpend: 0,
+      proposedAnnualSpend: 18000,
+      usageSignal: "Only pilot usage captured in two departments",
+      evidence: ["Quote converts a free pilot into a paid annual contract."],
+      alternatives: ["Continue manual intake"],
+      businessImpact: "Useful pilot, but spend has no prior contract baseline.",
+    });
+
+    expect(Number.isFinite(scored.priceIncreasePercent)).toBe(true);
+    expect(scored.priceIncreasePercent).toBe(100);
+    expect(scored.scoreFactors).toContain("New spend request has no current contract baseline");
+  });
+
   it("creates action briefs with source evidence and next timing", () => {
     const scored = scoreRenewal(renewalRecords[0]);
 
