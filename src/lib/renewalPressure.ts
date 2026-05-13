@@ -29,10 +29,20 @@ export function daysUntil(date: string, from = referenceDate): number {
   return Math.ceil((new Date(`${date}T12:00:00-04:00`).getTime() - from.getTime()) / dayMs);
 }
 
+function calculatePriceIncreasePercent(currentAnnualSpend: number, proposedAnnualSpend: number): number {
+  if (currentAnnualSpend <= 0) {
+    return proposedAnnualSpend > 0 ? 100 : 0;
+  }
+
+  return ((proposedAnnualSpend - currentAnnualSpend) / currentAnnualSpend) * 100;
+}
+
 export function scoreRenewal(record: RenewalRecord): RenewalPressure {
   const daysUntilCancellation = daysUntil(record.cancellationDeadline);
-  const priceIncreasePercent =
-    ((record.proposedAnnualSpend - record.currentAnnualSpend) / record.currentAnnualSpend) * 100;
+  const priceIncreasePercent = calculatePriceIncreasePercent(
+    record.currentAnnualSpend,
+    record.proposedAnnualSpend,
+  );
 
   const factors: string[] = [];
   let score = 30;
@@ -48,7 +58,10 @@ export function scoreRenewal(record: RenewalRecord): RenewalPressure {
     factors.push("Cancellation window is still outside the immediate scramble zone");
   }
 
-  if (priceIncreasePercent >= 30) {
+  if (record.currentAnnualSpend <= 0 && record.proposedAnnualSpend > 0) {
+    score += 22;
+    factors.push("New spend request has no current contract baseline");
+  } else if (priceIncreasePercent >= 30) {
     score += 22;
     factors.push("Price increase is above 30%");
   } else if (priceIncreasePercent >= 12) {

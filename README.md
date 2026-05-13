@@ -59,6 +59,9 @@ The intended verification path for this slice is:
   workflow judgment, not live procurement integrations.
 - Used explicit score factors instead of a black-box model so reviewers can see
   exactly why a renewal is urgent.
+- Treat proposed spend with no current contract baseline as a capped 100% uplift
+  instead of allowing `Infinity%` in the UI; the pressure still stays high, but
+  the reviewer brief remains deterministic and readable.
 - Ranked vendors by action pressure first, not spend, because cancellation
   windows and owner ambiguity create avoidable leverage loss.
 - Rendered the negotiation brief directly in the app instead of hiding it behind
