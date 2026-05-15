@@ -62,6 +62,10 @@ The intended verification path for this slice is:
 - Treat proposed spend with no current contract baseline as a capped 100% uplift
   instead of allowing `Infinity%` in the UI; the pressure still stays high, but
   the reviewer brief remains deterministic and readable.
+- Treat missing renewal evidence as an explicit approval gap in the generated
+  brief instead of crashing or implying a source artifact exists. A renewal desk
+  should preserve the pressure score while still telling the reviewer what proof
+  must be attached before approval.
 - Ranked vendors by action pressure first, not spend, because cancellation
   windows and owner ambiguity create avoidable leverage loss.
 - Rendered the negotiation brief directly in the app instead of hiding it behind

@@ -44,4 +44,23 @@ describe("renewal pressure scoring", () => {
     expect(scored.brief).toContain("renewal email cites");
     expect(scored.brief).toContain("Next action:");
   });
+
+  it("keeps the action brief readable when renewal evidence is missing", () => {
+    const scored = scoreRenewal({
+      vendor: "EvidenceGap CRM",
+      category: "CRM",
+      renewalDate: "2026-07-01",
+      cancellationDeadline: "2026-05-20",
+      owner: "Revenue Operations",
+      currentAnnualSpend: 24000,
+      proposedAnnualSpend: 26000,
+      usageSignal: "Usage supports renewal but no source artifacts were attached",
+      evidence: [],
+      alternatives: ["Delay approval until source artifacts are attached"],
+      businessImpact: "Sales operations needs a decision packet before renewal approval.",
+    });
+
+    expect(scored.brief).toContain("Evidence gap: attach at least one renewal source before approval.");
+    expect(scored.brief).toContain("Next action:");
+  });
 });
