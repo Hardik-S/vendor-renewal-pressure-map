@@ -101,7 +101,7 @@ export function scoreRenewal(record: RenewalRecord): RenewalPressure {
 
   const brief = [
     `${record.vendor} scores ${pressureScore}/100 because ${factors[0].toLowerCase()} and ${factors[1].toLowerCase()}.`,
-    `Use evidence from ${record.evidence[0].toLowerCase()}`,
+    formatEvidenceBriefLine(record.evidence),
     `Next action: ${nextAction}`,
   ].join(" ");
 
@@ -119,6 +119,16 @@ export function scoreRenewal(record: RenewalRecord): RenewalPressure {
 
 export function rankRenewals(records: RenewalRecord[]): RenewalPressure[] {
   return records.map(scoreRenewal).sort((a, b) => b.pressureScore - a.pressureScore);
+}
+
+function formatEvidenceBriefLine(evidence: string[]): string {
+  const firstEvidence = evidence[0]?.trim();
+
+  if (!firstEvidence) {
+    return "Evidence gap: attach at least one renewal source before approval.";
+  }
+
+  return `Use evidence from ${firstEvidence.toLowerCase()}`;
 }
 
 export function formatCurrency(value: number): string {
