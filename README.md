@@ -68,6 +68,9 @@ The intended verification path for this slice is:
   must be attached before approval.
 - Ranked vendors by action pressure first, not spend, because cancellation
   windows and owner ambiguity create avoidable leverage loss.
+- Rank by uncapped pressure before displaying the capped 100-point score, then
+  break true ties by the earliest cancellation deadline so equally risky
+  renewals still preserve the next avoidable leverage-loss date.
 - Rendered the negotiation brief directly in the app instead of hiding it behind
   export controls; a future increment can add copy/download actions after the
   core reasoning is proven.
