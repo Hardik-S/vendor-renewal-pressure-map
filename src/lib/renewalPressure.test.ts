@@ -17,6 +17,43 @@ describe("renewal pressure scoring", () => {
     expect(scoreRenewal(deskPilot!).priceIncreasePercent).toBeCloseTo(50, 1);
   });
 
+  it("breaks equal pressure scores by the earliest cancellation deadline", () => {
+    const ranked = rankRenewals([
+      {
+        vendor: "Later Same-Score Vendor",
+        category: "Workflow",
+        renewalDate: "2026-06-30",
+        cancellationDeadline: "2026-05-28",
+        owner: "Procurement",
+        currentAnnualSpend: 20000,
+        proposedAnnualSpend: 23000,
+        usageSignal: "Usage supports renewal",
+        evidence: ["Renewal notice includes proposed pricing."],
+        alternatives: ["Manual workaround"],
+        businessImpact: "Same pressure as the earlier deadline except for timing.",
+      },
+      {
+        vendor: "Earlier Same-Score Vendor",
+        category: "Workflow",
+        renewalDate: "2026-06-30",
+        cancellationDeadline: "2026-05-20",
+        owner: "Procurement",
+        currentAnnualSpend: 20000,
+        proposedAnnualSpend: 23000,
+        usageSignal: "Usage supports renewal",
+        evidence: ["Renewal notice includes proposed pricing."],
+        alternatives: ["Manual workaround"],
+        businessImpact: "Same pressure as the later deadline except for timing.",
+      },
+    ]);
+
+    expect(ranked.map((record) => record.vendor)).toEqual([
+      "Earlier Same-Score Vendor",
+      "Later Same-Score Vendor",
+    ]);
+    expect(ranked[0].pressureScore).toBe(ranked[1].pressureScore);
+  });
+
   it("keeps proposed new spend from rendering infinite uplift", () => {
     const scored = scoreRenewal({
       vendor: "PilotDesk",

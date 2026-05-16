@@ -25,6 +25,10 @@ export type RenewalPressure = RenewalRecord & {
 const referenceDate = new Date("2026-05-11T12:00:00-04:00");
 const dayMs = 24 * 60 * 60 * 1000;
 
+type RenewalPressureWithRankingScore = RenewalPressure & {
+  rawPressureScore: number;
+};
+
 export function daysUntil(date: string, from = referenceDate): number {
   return Math.ceil((new Date(`${date}T12:00:00-04:00`).getTime() - from.getTime()) / dayMs);
 }
@@ -37,7 +41,7 @@ function calculatePriceIncreasePercent(currentAnnualSpend: number, proposedAnnua
   return ((proposedAnnualSpend - currentAnnualSpend) / currentAnnualSpend) * 100;
 }
 
-export function scoreRenewal(record: RenewalRecord): RenewalPressure {
+function scoreRenewalForRanking(record: RenewalRecord): RenewalPressureWithRankingScore {
   const daysUntilCancellation = daysUntil(record.cancellationDeadline);
   const priceIncreasePercent = calculatePriceIncreasePercent(
     record.currentAnnualSpend,
@@ -88,7 +92,8 @@ export function scoreRenewal(record: RenewalRecord): RenewalPressure {
     factors.push("Usage supports renewal but can still shape terms");
   }
 
-  const pressureScore = Math.min(100, Math.round(score));
+  const rawPressureScore = Math.round(score);
+  const pressureScore = Math.min(100, rawPressureScore);
   const pressureLevel =
     pressureScore >= 78 ? "critical" : pressureScore >= 58 ? "watch" : "stable";
 
@@ -110,6 +115,7 @@ export function scoreRenewal(record: RenewalRecord): RenewalPressure {
     daysUntilCancellation,
     priceIncreasePercent,
     pressureScore,
+    rawPressureScore,
     pressureLevel,
     nextAction,
     brief,
@@ -117,8 +123,20 @@ export function scoreRenewal(record: RenewalRecord): RenewalPressure {
   };
 }
 
+export function scoreRenewal(record: RenewalRecord): RenewalPressure {
+  const { rawPressureScore: _rawPressureScore, ...pressure } = scoreRenewalForRanking(record);
+  return pressure;
+}
+
 export function rankRenewals(records: RenewalRecord[]): RenewalPressure[] {
-  return records.map(scoreRenewal).sort((a, b) => b.pressureScore - a.pressureScore);
+  return records
+    .map(scoreRenewalForRanking)
+    .sort(
+      (a, b) =>
+        b.rawPressureScore - a.rawPressureScore ||
+        a.daysUntilCancellation - b.daysUntilCancellation,
+    )
+    .map(({ rawPressureScore: _rawPressureScore, ...pressure }) => pressure);
 }
 
 function formatEvidenceBriefLine(evidence: string[]): string {
